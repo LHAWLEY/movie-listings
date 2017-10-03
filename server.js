@@ -1,8 +1,8 @@
 const http = require('http'),
       url = require('url'),
-      htmlController = require('./controllers/html_controller'),
-      moviesController = require('./controllers/movies_controller'),
-      searchController = require('./controllers/search_controller');
+      htmlController = require('movie-listings/controllers/html_controller'),
+      moviesController = require('movie-listings/controllers/movies_controller'),
+      searchController = require('movie-listings/controllers/search_controller');
 
 const server = http.createServer((req, res) => {
   const { method } = req;
