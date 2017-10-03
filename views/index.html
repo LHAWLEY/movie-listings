@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+
+  <title>Movie Finder</title>
+</head>
+<body class="container">
+  <div class="mt-3 mb-3">
+    <form class="form">
+      <div class="form-group">
+        <div class="input-group">
+          <input type="text" class="form-control searchbox" placeholder="Find movies" aria-label="Find movies">
+          <span class="input-group-btn">
+            <button class="btn btn-primary" type="button">Search</button>
+          </span>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="results"></div>
+  <nav class="container">
+    <ul class="pagination justify-content-center">
+      <li class="page-item active">
+        <a class="page-link not-disabled" data-page="1" href="#">1</a>
+      </li>
+    </ul>
+  </nav>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js" type="text/javascript"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous" type="text/javascript"></script>
+<script type="text/javascript">
+  $(document).ready(function () {
+    const getResults = e => {
+      const { currentTarget: { dataset: { page = 1 } } } = e;
+      const query = $('.searchbox').val();
+      const path = query ? 'search' : 'movies';
+      e.preventDefault();
+
+      $.get(`/${path}?q=${query}&page=${page}`).then(renderResults);
+    };
+
+    $('.pagination').on('click', '.page-link.not-disabled', getResults);
+    $('.form').on('submit', getResults);
+
+    const renderResults = ({ results = [], total_pages, page }) => {
+      let html = results.reduce(renderResult, '');
+
+      if (!results.length) {
+        html = '<p>No results found.</p>';
+      }
+
+      $('.results').html(html);
+      $('.pagination').html(renderPagination({ total_pages, page }));
+    };
+
+    const renderResult = (html, { poster_path, title = 'N/A', overview = 'N/A', vote_average = 'N/A', release_date }) => {
+      const date = release_date ? moment(release_date).format('MM/DD/YYYY') : 'N/A';
+
+      return html += `
+        <ul class="list-unstyled">
+          <li class="media">
+            <img class="d-flex mr-3" src='https:\/\/image.tmdb.org/t/p/w154/${poster_path}' alt="No poster available">
+            <div class="media-body">
+              <h5 class="mt-0 mb-1">${title}</h5>
+              <p>${overview}</p>
+              <p class="mb-0">Release date: ${date}</p>
+              <p class="mb-0">Average vote: ${vote_average}</p>
+            </div>
+          </li>
+        </ul>
+      `
+    };
+
+    const renderPagination = ({ total_pages = 1, page = 1 }) => {
+      const leftClass = page === 1 ? 'disabled' : 'not-disabled';
+      const rightClass = page === total_pages ? 'disabled' : 'not-disabled';
+
+      let html = renderArrow({ label: 'Previous', pictogram: '&laquo;', classname: leftClass, page: page - 1 });
+
+      for (let i = page - 1; i <= page + 1; i++) {
+        if (i > 0 && i <= total_pages) {
+          const activeClass = i === page ? 'active' : '';
+
+          html += renderPageNumber({ page: i, classname: activeClass });
+        }
+      }
+
+      return html += renderArrow({ label: 'Next', pictogram: '&raquo;', classname: rightClass, page: page + 1 });
+    };
+
+    const renderArrow = ({ label, pictogram, classname = '', page }) => {
+      return `<li class="page-item ${classname}">
+        <a class="page-link ${classname}" href="#" aria-label="${label}" data-page="${page}">
+          <span aria-hidden="true">${pictogram}</span>
+          <span class="sr-only">${label}</span>
+        </a>
+      </li>`;
+    };
+
+    const renderPageNumber = ({ page, classname = '' }) => {
+      return `<li class="page-item ${classname}">
+        <a class="page-link not-disabled" data-page="${page}" href="#">${page}</a>
+      </li>`
+    };
+
+    $('.page-link').click();
+  });
+</script>
+</html>
